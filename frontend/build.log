@@ -1,0 +1,12 @@
+﻿[33mΓ¥»[39m Building...
+[32mΓ£ö[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mmain-JL23GT3Z.js[39m   [2m | [22m[2mmain[22m         [2m | [22m[36m795.37 kB[39m[2m | [22m              [36m207.78 kB[39m
+[32mstyles-Y6WDYJZQ.css[39m[2m | [22m[2mstyles[22m       [2m | [22m [36m10.03 kB[39m[2m | [22m                [36m1.08 kB[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m[1m[93m805.40 kB[39m[22m[2m | [22m              [1m208.86 kB[22m
+
+Application bundle generation complete. [8.084 seconds] - 2026-03-19T06:12:43.600Z
+
+Output location: D:\jio\frontend\dist\frontend
+

@@ -1,0 +1,360 @@
+<div class="page-container">
+
+  <input type="file" #fileInput (change)="onFileSelected($event)" accept=".csv,.json,.xlsx" style="display: none">
+
+  <!-- Left Nav -->
+  <aside class="sidebar">
+    <div class="left-nav-item" (click)="goToDashboard()">Dashboard</div>
+    <div class="left-nav-item active">Test cases</div>
+    <div class="left-nav-item">Test plans</div>
+    <div class="left-nav-item">Test runs</div>
+  </aside>
+
+  <!-- Folder Panel (Middle) -->
+  <section class="folder-panel">
+    <div class="folder-header">
+      <h3 class="folder-title">Test case folders </h3>
+      <div class="folder-header-actions" style="display: flex; align-items: center;">
+        <button class="action-menu-btn" title="Expand all" (click)="expandAllFolders()">▼</button>
+        <button class="action-menu-btn" title="Collapse all" (click)="collapseAllFolders()">▶</button>
+        <button class="btn btn-sm btn-outline btn-new ml-2" (click)="openFolderModal()">+ New</button>
+      </div>
+    </div>
+
+    <div class="folder-search">
+      <input type="text" placeholder="Filter folders..." class="search-input"
+        (input)="folderSearchTerm = $any($event.target).value">
+    </div>
+
+    <!-- Recursive Template -->
+    <ng-template #folderTreeTemplate let-nodes="nodes" let-level="level">
+      <ul class="folder-tree-list">
+        <li *ngFor="let node of nodes">
+          <div class="folder-item tree-node" [class.selected]="folderSelection === node.id"
+            (click)="selectFolder(node)">
+            <div class="folder-item-left" [style.padding-left.px]="level * 16">
+              <span class="tree-toggle" *ngIf="node.children?.length" (click)="toggleFolderExpand($event, node.id)">
+                {{ expandedFolderIds.has(node.id) ? '▼' : '▶' }}
+              </span>
+              <span class="tree-toggle-empty" *ngIf="!node.children?.length"></span>
+              <span class="folder-icon">📁</span>
+              <span class="folder-name" [title]="node.name">{{ node.name }}</span>
+            </div>
+
+            <div class="folder-item-right">
+              <span class="folder-count">{{ getFolderTestCaseCount(node.id) }}</span>
+              <div class="folder-actions-wrapper" (click)="$event.stopPropagation()">
+                <button class="action-menu-btn" (click)="toggleFolderMenu($event, node.id)">⋮</button>
+                <div class="dropdown-menu-tiny" *ngIf="activeFolderMenu === node.id" (click)="$event.stopPropagation()">
+                  <button class="dropdown-item-tiny" (click)="openRenameFolder(node)">Rename</button>
+                  <button class="dropdown-item-tiny" (click)="openAddSubfolder(node)">Add subfolder</button>
+                  <button class="dropdown-item-tiny" (click)="moveFolder(node)">Move</button>
+                  <button class="dropdown-item-tiny" (click)="copyFolder(node)">Copy</button>
+                  <button class="dropdown-item-tiny text-danger" (click)="deleteFolder(node)">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="expandedFolderIds.has(node.id) && node.children?.length">
+            <ng-container
+              *ngTemplateOutlet="folderTreeTemplate; context:{nodes: node.children, level: level + 1}"></ng-container>
+          </div>
+        </li>
+      </ul>
+    </ng-template>
+
+    <div class="folder-tree-container">
+      <ul class="folder-tree-list">
+        <li>
+          <div class="folder-item special-folder" [class.selected]="folderSelection === 'all'"
+            (click)="selectSpecialFolder('all')">
+            <div class="folder-item-left">
+              <span class="tree-toggle-empty"></span>
+              <span class="folder-icon">📁</span>
+              <span class="folder-name">All test cases</span>
+            </div>
+            <span class="folder-count">{{ getTotalTestCases() }}</span>
+          </div>
+        </li>
+        <li>
+          <div class="folder-item special-folder" [class.selected]="folderSelection === 'unassigned'"
+            (click)="selectSpecialFolder('unassigned')">
+            <div class="folder-item-left">
+              <span class="tree-toggle-empty"></span>
+              <span class="folder-icon">📁</span>
+              <span class="folder-name">Test cases in no folder</span>
+            </div>
+            <span class="folder-count">0</span>
+          </div>
+        </li>
+      </ul>
+      <ng-container
+        *ngTemplateOutlet="folderTreeTemplate; context:{nodes: filteredFolderTree, level: 0}"></ng-container>
+    </div>
+  </section>
+
+  <!-- Main Content Panel (Right) -->
+  <section class="content-panel">
+    <header class="repo-header">
+      <h1 class="repo-title">{{ getSelectionTitle() }}</h1>
+      <div class="repo-actions" *ngIf="currentFilteredTestCases.length > 0">
+        <button class="secondary-btn" (click)="openGlobalImportModal()">Import</button>
+        <button class="primary-btn" (click)="openTestCaseModal()">Add test case</button>
+      </div>
+    </header>
+
+    <div class="repo-content">
+      <!-- Empty State UI -->
+      <div class="empty-state-container" *ngIf="currentFilteredTestCases.length === 0">
+        <div class="empty-panel-testiny">
+          <svg class="empty-icon text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <h2 class="empty-heading">Create test cases</h2>
+          <p class="empty-text">A test case includes steps and data to verify specific functionality.</p>
+
+          <div class="action-buttons">
+            <button class="primary-btn" (click)="openTestCaseModal()">Create a test case</button>
+            <div style="position: relative;">
+              <button class="secondary-btn" (click)="toggleImport($event)">Import</button>
+              <div class="dropdown-menu import-menu-inline" [class.open]="isImportOpen" (click)="$event.stopPropagation()">
+                <button class="dropdown-item" (click)="onImport('CSV')">Import CSV</button>
+                <button class="dropdown-item" (click)="onImport('Excel')">Import Excel</button>
+                <button class="dropdown-item" (click)="onImport('JSON')">Import JSON</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filled layout -->
+      <div class="filled-layout" *ngIf="currentFilteredTestCases.length > 0">
+
+        <div class="grid-layout">
+          <div class="testcases-column">
+            
+            <div class="column-header" style="flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; gap: 8px; flex-grow: 1;">
+                <input type="text" placeholder="Search title..." class="form-control" style="width: 200px; padding: 4px 8px;" [(ngModel)]="searchTitle" (ngModelChange)="updateFilteredTestCases()">
+                
+                <select class="form-control" style="width: 140px; padding: 4px 8px;" [(ngModel)]="filterPriority" (ngModelChange)="updateFilteredTestCases()">
+                  <option value="">All Priorities</option>
+                  <option value="P1">P1</option>
+                  <option value="P2">P2</option>
+                  <option value="P3">P3</option>
+                  <option value="Normal">Normal</option>
+                </select>
+
+                <select class="form-control" style="width: 140px; padding: 4px 8px;" [(ngModel)]="filterType" (ngModelChange)="updateFilteredTestCases()">
+                  <option value="">All Types</option>
+                  <option value="Sanity">Sanity</option>
+                  <option value="Regression">Regression</option>
+                  <option value="Stress">Stress</option>
+                  <option value="Performance">Performance</option>
+                  <option value="Functional">Functional</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+
+              <div class="bulk-actions" *ngIf="selectedCaseIds.size > 0" style="display: flex; align-items: center;">
+                <span class="selected-count">{{ selectedCaseIds.size }} selected</span>
+                
+                <div style="position: relative;" *ngIf="selectedCaseIds.size >= 1">
+                  <button class="btn btn-sm btn-outline ml-2" (click)="editSelectedCases($event)">Edit</button>
+                  <div class="dropdown-menu import-menu-inline" *ngIf="selectedCaseIds.size > 1" [class.open]="isBulkEditMenuOpen" style="top: 100%; left: 8px; min-width: 220px; padding: 12px; margin-top: 4px; z-index: 1000;" (click)="$event.stopPropagation()">
+                    <div style="margin-bottom: 8px; font-weight: 600; font-size: 13px;">Change State</div>
+                    <div class="select-wrapper" style="margin-bottom: 12px;">
+                      <select [(ngModel)]="bulkEditState" class="form-control" style="width: 100%;">
+                        <option value="Design">Design</option>
+                        <option value="Under review">Under review</option>
+                        <option value="Reviewed">Reviewed</option>
+                        <option value="obsolete">obsolete</option>
+                      </select>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <button class="btn btn-sm btn-outline" (click)="isBulkEditMenuOpen = false">Cancel</button>
+                      <button class="btn btn-sm btn-primary" (click)="applyBulkEdit()">Apply</button>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn btn-sm btn-danger ml-2" (click)="deleteSelectedCases()">Delete</button>
+              </div>
+              <div style="flex-grow: 0;" *ngIf="selectedCaseIds.size === 0"></div>
+              <div class="table-settings dropdown-wrapper">
+                <button class="action-menu-btn" style="visibility: visible; font-size: 18px; padding: 4px 8px;" title="Columns" (click)="toggleColumnsMenu($event)">⚙️</button>
+                <div class="dropdown-menu import-menu-inline" [class.open]="isColumnsMenuOpen" style="right: 0; min-width: 200px; padding: 8px;" (click)="$event.stopPropagation()">
+                  <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: #333; padding-left: 8px;">Columns</h4>
+                  <div *ngFor="let col of columns" style="padding: 4px 8px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" style="margin: 0;" [checked]="isColumnVisible(col.key)" (change)="toggleColumn(col.key)">
+                    <label style="font-size: 13px; margin: 0; cursor: pointer; user-select: none;" (click)="toggleColumn(col.key)">{{ col.label }}</label>
+                  </div>
+                  <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                  <button class="dropdown-item-tiny" style="color: #0052cc; text-align: center; padding: 8px 0;" (click)="restoreDefaultColumns()">Restore Defaults</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="tc-table-container">
+              <table class="tc-table">
+                <thead>
+                  <tr>
+                    <th class="col-checkbox">
+                      <input type="checkbox" class="row-checkbox"
+                             [checked]="allSelected"
+                             [indeterminate]="someSelected"
+                             (change)="toggleAllCases($event)">
+                    </th>
+                    <th class="col-id" *ngIf="isColumnVisible('id')">ID</th>
+                    <th class="col-title" *ngIf="isColumnVisible('title')">Title</th>
+                    <th class="col-owner" *ngIf="isColumnVisible('owner')">Owner</th>
+                    <th class="col-state" *ngIf="isColumnVisible('state')">State</th>
+                    <th class="col-type" *ngIf="isColumnVisible('type')">Type</th>
+                    <th class="col-automation" *ngIf="isColumnVisible('automation')">Automation</th>
+                    <th class="col-priority" *ngIf="isColumnVisible('priority')">Priority</th>
+                    <th class="col-created" *ngIf="isColumnVisible('createdAt')">Created At</th>
+                    <th class="col-modified-at" *ngIf="isColumnVisible('modifiedAt')">Modified At</th>
+                    <th class="col-modified" *ngIf="isColumnVisible('modifiedBy')">Modified By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tc of currentFilteredTestCases" (click)="selectTestCase(tc)"
+                    [class.selected]="selectedTestCase?.id === tc.id || selectedCaseIds.has(tc.id)">
+                    <td class="col-checkbox" (click)="$event.stopPropagation()">
+                      <input type="checkbox" class="row-checkbox" [checked]="selectedCaseIds.has(tc.id)"
+                        (click)="toggleCaseSelection($event, tc.id)">
+                    </td>
+                    <td class="col-id" *ngIf="isColumnVisible('id')"><span class="tc-id-badge">{{ formatId(tc.id) }}</span></td>
+                    <td class="col-title" *ngIf="isColumnVisible('title')">{{ tc.name }}</td>
+                    <td class="col-owner" *ngIf="isColumnVisible('owner')">{{ tc.owner || 'Unassigned' }}</td>
+                    <td class="col-state" *ngIf="isColumnVisible('state')" (click)="$event.stopPropagation()">
+                      <span class="state-badge" [ngClass]="{
+                        'state-design': tc.state === 'Design',
+                        'state-under-review': tc.state === 'Under review',
+                        'state-reviewed': tc.state === 'Reviewed',
+                        'state-obsolete': tc.state === 'obsolete'
+                      }">{{ tc.state || 'Design' }}</span>
+                    </td>
+                    <td class="col-type" *ngIf="isColumnVisible('type')">{{ tc.type || 'Functional' }}</td>
+                    <td class="col-automation" *ngIf="isColumnVisible('automation')">{{ tc.isAutomated ? 'Yes' : 'No' }}</td>
+                    <td class="col-priority" *ngIf="isColumnVisible('priority')">
+                      <span class="priority-badge" [ngClass]="{'high': tc.priority === 'High', 'medium': tc.priority === 'Medium', 'low': tc.priority === 'Low'}">{{ tc.priority || 'Normal' }}</span>
+                    </td>
+                    <td class="col-created" *ngIf="isColumnVisible('createdAt')">{{ tc.createdAt | date:'shortDate' }}</td>
+                    <td class="col-modified-at" *ngIf="isColumnVisible('modifiedAt')">{{ getTimeAgo(tc.modifiedAt) }}</td>
+                    <td class="col-modified" *ngIf="isColumnVisible('modifiedBy')">{{ tc.owner || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right Detail Panel Details Component Wrapper -->
+          <div class="detail-panel" *ngIf="selectedTestCase">
+            <div class="detail-panel-header">
+               <div class="detail-title-wrapper" style="margin-right: 16px;">
+                 <span class="tc-id-badge" style="margin-right: 8px;">{{ formatId(selectedTestCase.id) }}</span>
+                 <h2 class="panel-title">{{ selectedTestCase.name }}</h2>
+               </div>
+               <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end;">
+                 <button class="btn btn-sm btn-outline" (click)="editSelectedCase(selectedTestCase.id!)">Edit</button>
+                 <button class="btn btn-sm btn-danger text-danger" style="background: transparent; border: 1px solid #d32f2f;" (click)="deleteSingleCase(selectedTestCase.id!)">Delete</button>
+                 <button class="action-menu-btn btn-close-panel" (click)="closeTestCaseDetail()" title="Close details (Esc)">&times;</button>
+               </div>
+            </div>
+
+            <div class="detail-panel-body">
+                <div class="detail-tabs">
+                  <div class="tab" [class.active]="activeTab === 'Comments'" (click)="activeTab = 'Comments'">Comments</div>
+                  <div class="tab" [class.active]="activeTab === 'Activity'" (click)="activeTab = 'Activity'">Activity</div>
+                  <div class="tab" [class.active]="activeTab === 'Files'" (click)="activeTab = 'Files'">Files</div>
+                </div>
+
+                <div class="detail-content">
+                  <!-- Properties Section -->
+                  <div class="prop-group">
+                    <div class="prop-item">
+                      <span class="prop-label">Owner</span>
+                      <span class="prop-value">{{ selectedTestCase.owner || 'Unassigned' }}</span>
+                    </div>
+                    <div class="prop-item">
+                      <span class="prop-label">Priority</span>
+                      <span class="prop-value">
+                        <span class="priority-badge" [ngClass]="{'high': selectedTestCase.priority === 'High', 'medium': selectedTestCase.priority === 'Medium', 'low': selectedTestCase.priority === 'Low'}">{{ selectedTestCase.priority || 'Normal' }}</span>
+                      </span>
+                    </div>
+                    <div class="prop-item">
+                      <span class="prop-label">Type</span>
+                      <span class="prop-value">{{ selectedTestCase.type || 'Functional' }}</span>
+                    </div>
+                    <div class="prop-item">
+                      <span class="prop-label">State</span>
+                      <span class="prop-value">
+                        <span class="state-badge" [ngClass]="{
+                          'state-design': selectedTestCase.state === 'Design',
+                          'state-under-review': selectedTestCase.state === 'Under review',
+                          'state-reviewed': selectedTestCase.state === 'Reviewed',
+                          'state-obsolete': selectedTestCase.state === 'obsolete'
+                        }">{{ selectedTestCase.state || 'Design' }}</span>
+                      </span>
+                    </div>
+                  <div class="prop-item">
+                    <span class="prop-label">Automation</span>
+                    <span class="prop-value">{{ selectedTestCase.isAutomated ? 'Yes' : 'No' }}</span>
+                  </div>
+                  <div class="prop-item" *ngIf="selectedTestCase.tags">
+                    <span class="prop-label">Tags</span>
+                    <div class="tags-container" style="display: flex; flex-wrap: wrap; gap: 4px;">
+                      <span class="tag-badge" *ngFor="let tag of getTagsArray(selectedTestCase.tags)">{{ tag }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Precondition -->
+              <div class="detail-section">
+                <h3 class="section-title">Precondition</h3>
+                <div class="rich-text-content">{{ selectedTestCase.precondition || 'No precondition provided.' }}</div>
+              </div>
+
+              <!-- Steps -->
+              <div class="detail-section">
+                <h3 class="section-title">Steps</h3>
+                <div class="steps-list" *ngIf="selectedTestCase.steps && selectedTestCase.steps.length > 0; else noSteps">
+                  <div class="step-item" *ngFor="let step of selectedTestCase.steps; let i = index">
+                    <div class="step-number">{{ i + 1 }}</div>
+                    <div class="step-content">
+                      <div class="step-text" *ngIf="step.description || step.expectedResult">
+                        <strong>Step:</strong> <span class="rich-text-content" style="padding:0; border:none; background:transparent;">{{ step.description || '-' }}</span>
+                      </div>
+                      <div class="step-expected" *ngIf="step.description || step.expectedResult">
+                        <strong>Expected Result:</strong> <span class="rich-text-content" style="padding:0; border:none; background:transparent;">{{ step.expectedResult || '-' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noSteps>
+                  <div class="rich-text-content text-muted">No steps defined.</div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modals -->
+<app-add-folder-modal *ngIf="isFolderModalOpen" [editData]="folderToEdit" (close)="closeFolderModal()"
+  (submitFolder)="onFolderSubmit($event)"></app-add-folder-modal>
+<app-add-test-case-modal *ngIf="isTestCaseModalOpen" [folders]="folders" [editData]="testCaseToEdit"
+  (close)="closeTestCaseModal()" (submitTestCase)="onTestCaseSubmit($event)"></app-add-test-case-modal>
+<!-- Global Import Modal -->
+<app-import-test-case-modal *ngIf="isGlobalImportModalOpen" (close)="closeGlobalImportModal()" (submitImport)="onGlobalImportSubmit($event)">
+</app-import-test-case-modal>

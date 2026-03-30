@@ -1,0 +1,45 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>Add project</h2>
+      <button type="button" class="modal-close" (click)="onClose()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button type="button" class="tab" [class.active]="activeTab === 'PROJECT'" (click)="setTab('PROJECT')">PROJECT</button>
+      <button type="button" class="tab" [class.active]="activeTab === 'USERS'" (click)="setTab('USERS')">USERS</button>
+    </div>
+
+    <!-- Form Content -->
+    <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+      <div class="modal-body" *ngIf="activeTab === 'PROJECT'">
+        <div class="form-layout">
+          <div class="form-group">
+            <label for="name">Name <span>*</span></label>
+            <input type="text" id="name" formControlName="name" placeholder="Project name" class="form-control" [class.is-invalid]="projectForm.get('name')?.invalid && projectForm.get('name')?.touched">
+          </div>
+
+          <div class="form-group">
+            <label for="summary">Summary</label>
+            <textarea id="summary" formControlName="summary" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <div class="footer-right">
+          <button type="button" class="btn btn-secondary" (click)="onClose()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add project</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

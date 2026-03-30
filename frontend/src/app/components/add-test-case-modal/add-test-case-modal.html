@@ -1,0 +1,138 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <form [formGroup]="testCaseForm" (ngSubmit)="onSubmit()">
+      <!-- Header -->
+      <div class="modal-header">
+        <h2>{{ editData ? 'Edit test case' : 'Create test case' }}</h2>
+        <button type="button" class="modal-close close-btn" (click)="onClose()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <div class="form-layout">
+          <!-- Title -->
+          <div class="form-group">
+            <label>Title <span>*</span></label>
+            <input type="text" formControlName="title" placeholder="New test case" class="form-control" autofocus
+              [class.is-invalid]="testCaseForm.get('title')?.invalid && testCaseForm.get('title')?.touched" />
+          </div>
+
+          <!-- Owner / Priority -->
+          <div class="row">
+            <div class="form-group flex-1">
+              <label>Owner</label>
+              <input type="text" formControlName="owner" placeholder="Enter user name" class="form-control" />
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Priority</label>
+              <div class="select-wrapper">
+                <select formControlName="priority" class="form-control">
+                  <option value="High">High</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Type / Configurations -->
+          <div class="row">
+            <div class="form-group flex-1">
+              <label>Type</label>
+              <div class="select-wrapper">
+                <select formControlName="type" class="form-control">
+                  <option value="Sanity">Sanity</option>
+                  <option value="Regression">Regression</option>
+                  <option value="Stress">Stress</option>
+                  <option value="Performance">Performance</option>
+                  <option value="Functional">Functional</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Automated?</label>
+              <div class="select-wrapper">
+                <select formControlName="isAutomated" class="form-control">
+                  <option [ngValue]="false">No</option>
+                  <option [ngValue]="true">Yes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+
+
+          <div class="row">
+            <div class="form-group flex-1">
+              <label>State</label>
+              <div class="select-wrapper">
+                <select formControlName="state" class="form-control">
+                  <option value="Design">Design</option>
+                  <option value="Under review">Under review</option>
+                  <option value="Reviewed">Reviewed</option>
+                  <option value="obsolete">obsolete</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group flex-1" *ngIf="testCaseForm.get('isAutomated')?.value === true">
+              <label>Automation Script Link/ID <span class="text-muted">(Optional)</span></label>
+              <input type="text" formControlName="automationScript" placeholder="e.g. TC-123 or URL"
+                class="form-control" />
+            </div>
+          </div>
+          <!-- Tags -->
+          <div class="form-group">
+            <label>Tags <span class="text-muted">(comma-separated)</span></label>
+            <input type="text" formControlName="tags" placeholder="e.g. login, auth, regression" class="form-control" />
+          </div>
+          <!-- Precondition -->
+          <div class="form-group">
+            <label>Precondition</label>
+            <textarea formControlName="precondition" rows="3" class="form-control"
+              placeholder="Enter preconditions..."></textarea>
+          </div>
+
+          <!-- Steps -->
+          <div class="steps-section">
+            <label class="steps-label">Steps</label>
+
+            <div class="step-row" *ngFor="let step of steps; let i = index"
+              style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <span class="step-number" style="min-width: 24px;">{{i + 1}}</span>
+              <div class="step-inputs" style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                <input type="text" [ngModelOptions]="{standalone: true}" [(ngModel)]="step.description"
+                  placeholder="Step description" class="form-control" />
+                <input type="text" [ngModelOptions]="{standalone: true}" [(ngModel)]="step.expectedResult"
+                  placeholder="Expected result" class="form-control" />
+              </div>
+              <button type="button" class="action-menu-btn text-danger" style="visibility: visible; align-self: center;" (click)="removeStep(i)" title="Remove step">
+                &times;
+              </button>
+            </div>
+
+            <button type="button" class="add-step-btn" (click)="addStep()">+ Add step</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary cancel-btn" (click)="onClose()">Cancel</button>
+        <button type="submit" class="btn btn-primary primary-btn"
+          [disabled]="testCaseForm.invalid || !testCaseForm.get('title')?.value">
+          {{ editData ? 'Save changes' : 'Create' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

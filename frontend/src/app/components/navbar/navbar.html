@@ -1,0 +1,52 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <img src="jio-logo.svg" class="logo" (click)="goToHome()" alt="Jio Logo" />
+
+
+
+    <div class="menu-item" (click)="goToHome()">Dashboard</div>
+
+    <div class="menu-item dropdown">
+      Projects
+      <div class="dropdown-menu">
+        <div class="dropdown-item" (click)="openProjectModal()">Create Project</div>
+        <div class="dropdown-item" (click)="navigateTo('/projects')">View Projects</div>
+      </div>
+    </div>
+
+    <div class="menu-item dropdown">
+      Run Automation
+      <div class="dropdown-menu">
+        <div class="dropdown-item" (click)="navigateTo('/automation/start')">Start Run</div>
+        <div class="dropdown-item" (click)="navigateTo('/automation/runs')">View Runs</div>
+      </div>
+    </div>
+
+    <div class="menu-item dropdown">
+      Management
+      <div class="dropdown-menu">
+        <div class="dropdown-item" (click)="navigateTo('/results/compare')">Compare Results</div>
+        <div class="dropdown-item" (click)="navigateTo('/reports')">Reports</div>
+        <div class="dropdown-item" (click)="navigateTo('/settings')">Settings</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <div class="navbar-title">Jio TestCase Management System</div>
+
+    <div class="icon-btn notification-icon" title="Notifications">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+    </div>
+
+    <div class="avatar">
+      <div class="avatar-text">US</div>
+    </div>
+  </div>
+</nav>
+
+<app-add-project-modal *ngIf="isProjectModalOpen" (close)="closeProjectModal()"></app-add-project-modal>

@@ -1,0 +1,59 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>Import Test Cases</h2>
+      <button type="button" class="modal-close close-btn" (click)="onClose()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="upload-area" 
+           [class.dragging]="isDragging"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)">
+        
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        
+        <p class="upload-text">Upload a CSV or Excel file</p>
+        <p class="upload-hint">Drag and drop your file here, or click to browse</p>
+        
+        <input type="file" #fileInput (change)="onFileChange($event)" accept=".csv,.xlsx" class="file-input-hidden">
+        <button type="button" class="btn btn-outline" (click)="fileInput.click()">Browse file</button>
+      </div>
+
+      <div class="file-details" *ngIf="selectedFile">
+        <div class="file-info">
+          <span class="file-icon">📄</span>
+          <span class="file-name">{{ selectedFile.name }}</span>
+        </div>
+        <button class="remove-btn" (click)="selectedFile = null; fileInput.value = ''">✕</button>
+      </div>
+
+      <div class="sample-link-container">
+        <a href="javascript:void(0)" class="sample-link">Download sample file</a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary cancel-btn" (click)="onClose()">Cancel</button>
+      <button type="button" class="btn btn-primary primary-btn" [disabled]="!selectedFile" (click)="onSubmit()">
+        Import
+      </button>
+    </div>
+  </div>
+</div>
