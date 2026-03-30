@@ -19,12 +19,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity in this exercise
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/test").permitAll()
-                .anyRequest().authenticated()
-            );
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/api/testcases", "/api/testcases/**").permitAll()
+                        .anyRequest().permitAll());
+
         return http.build();
     }
 

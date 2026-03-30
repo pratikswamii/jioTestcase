@@ -1,0 +1,8 @@
+com\testmo\controller\TestCaseController$BulkStateUpdateRequest.class
+com\testmo\TestmoApplication.class
+com\testmo\controller\TestController.class
+com\testmo\model\Step.class
+com\testmo\controller\TestCaseController.class
+com\testmo\model\TestCase.class
+com\testmo\config\SecurityConfig.class
+com\testmo\repository\TestCaseRepository.class
